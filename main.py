@@ -1,8 +1,10 @@
 
 from News import News
-
+from Discord import Discord
 
 def main():
-    news = News()
+    dc = Discord()
+    dc.message()
+    dc.run()
 
 main()

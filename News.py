@@ -5,7 +5,8 @@ from datetime import datetime
 
 class News:
 
-    def __init__(self, title:str = None, url:str = None, body:str = None, date:str = None) -> None:
+    def __init__(self, id:int = None, title:str = None, url:str = None, body:str = None, date:str = None) -> None:
+        self.id = id
         self.title = title
         self.url = url
         self.body = body
@@ -18,25 +19,33 @@ class News:
             sp = BeautifulSoup(response.content, 'html.parser')
             article_lists_scrap = sp.find_all('div', class_='post-news-body')
             for article_data in article_lists_scrap:
-                self.title = article_data.find('h6').find('a').text
-                self.url = article_data.find('h6').find('a')['href']
+                h6 = article_data.find('h6')
+                self.title = h6.find('a').text
+                self.url = h6.find('a')['href']
+                self.id = self.url.split("/")[-1]
                 self.body = article_data.find(class_='offset-top-5').find('p').text
                 self.date = article_data.find('span', class_="text-middle inset-left-10 text-italic text-black").text
-                article_lists.append(self)
+                article_lists.append(News(
+                    self.id,
+                    self.title,
+                    self.url,
+                    self.body,
+                    self.date
+                ))
             return article_lists
         else:
             return None
         
     def get_data_filter_by_day(self) -> list['News'] | None:
         results = self.get_data_news()
+
+        news = []
         for result in results:
-            date_format = "%d/%m/%Y"
-            formatted_date = datetime.strptime(result.date, date_format)
-        
-            if formatted_date >= datetime.now():
-                print(formatted_date)
-            else:
-                print("no news already")
+            date_formatted = datetime.strptime(result.date, "%d/%m/%Y")
+            if date_formatted <= datetime.now():
+                news.append(result)
+
+        return news
     
     def get_new_by_id(self, id:int) -> Optional['News'] | ValueError:
         url = f"https://baak.gunadarma.ac.id/berita/{id}"
@@ -52,4 +61,4 @@ class News:
             self.body = body[1].text
             return self
         else:
-            return ValueError("News not found")
+            return ValueError("News ID not found")
