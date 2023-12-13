@@ -1,12 +1,14 @@
 import requests as r
 from DiscordUser import DiscordUser
+from dotenv import load_dotenv
+import os
 
 
 class Discord:
     def __init__(self):
-        TOKEN_BOT = (
-            "MTE4MjkyNTc2NzQzNzQ2MzYzMw.GjJgQh.Kk0ibZpYXqulO9RGYHC_7G1WC6htDLBYq5qZAw"
-        )
+        load_dotenv()
+        TOKEN_BOT = os.getenv("TOKEN_DISCORD")
+        
         self.headers = {
             "Authorization": f"Bot {TOKEN_BOT}",
             "Content-Type": "application/json",
@@ -19,27 +21,22 @@ class Discord:
 
         if res.status_code == 200:
             user_info = DiscordUser(res.json())
-            print(f"Success connect to {user_info.username}!")
+            self.send_message(os.getenv("CHANNEL_COMMAND"), "Success connect to Discord!")
         else:
-            print("Error to connect DC")
+            print("Failed to connect Discord!")
+            print(res.json())
 
     def send_message(self, channel_id: int, content: str) -> bool:
-        results_chunk = split_content(content)
-        # Print or use the resulting chunks as needed
+        res = r.post(
+            f"https://discord.com/api/v10/channels/{channel_id}/messages",
+            headers=self.headers,
+            json={
+                "content": content,
+            },
+        )
 
-        for i, chunk in enumerate(results_chunk):
-            print(f"Chunk {i + 1}:", chunk)
-
-    # res = r.post(
-    #     f"https://discord.com/api/v10/channels/{channel_id}/messages",
-    #     headers=self.headers,
-    #     json={
-    #         "content": teks,
-    #     },
-    # )
-
-    # if res.status_code == 200:
-    #     return True
-    # else:
-    #     print(res.json())
-    #     return False
+        if res.status_code == 200:
+            return True
+        else:
+            print(res.json())
+            return False

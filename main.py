@@ -25,26 +25,7 @@ def split_content(content, chunk_size=3950):
 
 
 def main():
-    news = News()
-    news_list = news.get_data_news()
-
-    new_berita = "==== New Beritaaaa BAAK ====\n"
-    for new in news_list:
-        new_detail = news.get_new_by_id(new.id)
-        results_chunk = split_content(content=new_detail.body)
-        # Print or use the resulting chunks as needed
-
-        body_msg = ""
-        for i, chunk in enumerate(results_chunk):
-            body_msg += chunk
-
-        new_berita += (
-            f"```{new.title}\n{new.date}```" + "\n" + f"```{body_msg}```" + "\n\n"
-        )
-
     discord = Discord()
-    result = discord.send_message(1182984217425088552, new_berita)
-    print(result)
 
 
 main()
