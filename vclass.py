@@ -5,14 +5,16 @@ from datetime import datetime
 import re
 import time
 import datetime
- 
+import sys
 
 class vclass:
     def __init__(self, email:str, password:str):
         self.email = email
         self.password = password
         self.session = r.Session()
-        self.doLogin()
+        if self.authenticate() == False:
+            raise ValueError("Login Error! Make Sure email and Password are valid")
+
     
     def doLogin(self):
         res = self.session.get("https://v-class.gunadarma.ac.id/login/index.php")
@@ -26,18 +28,23 @@ class vclass:
 
         self.cookie = response.cookies.get_dict()
         # print(response.content)
-        return response.cookies.get_dict()
+        if 'You are logged in as' in response.text:
+            return True
+        else :
+            return False
     
     def checkAuth(self):
-        if(self.cookie != None):
-            req = self.session.get("https://v-class.gunadarma.ac.id/my")
-            sp = BeautifulSoup(req.content, 'html.parser')
-            if sp.find('input',attrs={'name':"logintoken"}) != None:
-                return self.doLogin()
-            else:
-                return self.cookie
+        checkReq = self.session.get("https://v-class.gunadarma.ac.id/my")
+        if 'You are logged in as' in checkReq.text:
+            return True
         else :
+            return False
+        
+    def authenticate(self):
+        if self.checkAuth() != True:
             return self.doLogin()
+        else :
+            return self.checkAuth()
     
     def getAssignmentToday(self):
         response = self.session.get("https://v-class.gunadarma.ac.id/calendar/view.php?view=day")
@@ -105,3 +112,16 @@ class vclass:
         else:
             timestamp = time.mktime(datetime.datetime.strptime(date, "%d/%m/%Y").timetuple())
             return self.getAssignmentByTimeStamp(timestamp)
+        
+    def doLogout(self):
+        logout = self.session.get("https://v-class.gunadarma.ac.id/my")
+        sp = BeautifulSoup(logout.content,'html.parser')
+        logoutLink = sp.find("a",string='Log out',href=True)['href']
+
+        response = self.session.get(logoutLink)
+
+        # print(response.text)
+        if "You are not logged in." in response.text:
+            return "Successfully logged out"
+        else :
+            return "Failed To Logout"
